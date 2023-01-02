@@ -1,12 +1,12 @@
 /* ************************************************************************** */
 /*                                                                            */
 /*                                                        :::      ::::::::   */
-/*   client.c                                           :+:      :+:    :+:   */
+/*   client_bonus.c                                     :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: amentag <amentag@student.1337.ma>          +#+  +:+       +#+        */
+/*   By: amentag <amentag@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
-/*   Created: 2023/01/02 13:40:19 by amentag           #+#    #+#             */
-/*   Updated: 2023/01/02 13:40:22 by amentag          ###   ########.fr       */
+/*   Created: 2023/01/02 13:40:31 by amentag           #+#    #+#             */
+/*   Updated: 2023/01/02 14:41:19 by amentag          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -14,21 +14,23 @@
 #include <signal.h>
 #include <stdlib.h>
 
+int	g_pid;
+
 void	ft_stop(void)
 {
 	write(2, "The pid is not correct\n", 23);
 	exit(1);
 }
 
+void	handler(void)
+{
+	write(1, "The message was sent successfully\n", 34);
+}
+
 void	send_signal(int pid, int signal)
 {
 	if (kill(pid, signal) == -1)
 		ft_stop();
-}
-
-int	ft_isdigit(char c)
-{
-	return (c >= '0' && c <= '9');
 }
 
 int	ft_atoi(char *str)
@@ -45,7 +47,7 @@ int	ft_atoi(char *str)
 		str++;
 		sign = -1;
 	}
-	while (ft_isdigit(*str))
+	while (*str >= '0' && *str <= '9')
 	{
 		result = result * 10 + (*str - '0');
 		str++;
@@ -55,27 +57,27 @@ int	ft_atoi(char *str)
 
 int	main(int ac, char **av)
 {
-	int	result;
 	int	i;
-	int	pid;
 
 	if (ac == 3)
 	{
-		pid = ft_atoi(av[ac - 2]);
-		if (pid <= 0)
+		signal(SIGUSR1, handler);
+		g_pid = ft_atoi(av[ac - 2]);
+		if (g_pid <= 0)
 			ft_stop();
-		while (*av[ac - 1])
+		while (1)
 		{
 			i = 8;
 			while (i--)
 			{
-				result = ((*av[ac - 1]) >> i) & 1;
-				if (result == 1)
-					send_signal(pid, SIGUSR1);
-				else if (result == 0)
-					send_signal(pid, SIGUSR2);
+				if (((*av[ac - 1]) >> i) & 1 == 1)
+					send_signal(g_pid, SIGUSR1);
+				else
+					send_signal(g_pid, SIGUSR2);
 				usleep(700);
 			}
+			if (*av[ac - 1] == 0)
+				break ;
 			av[ac - 1]++;
 		}
 	}
